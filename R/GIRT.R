@@ -1,5 +1,6 @@
 # generalized item response model
 library(irtoys)
+library(rstan)
 resp <- Scored
 datastan <- list(N=nrow(resp), M=ncol(resp), y=resp)
 model_G2PL <- stan_model("src/girtmodel.stan")
@@ -12,5 +13,12 @@ wbic <- function(log_lik) {
     wbic <- -mean(apply(log_lik, 1, sum))
     return(wbic)
 }
+waic <- function(log_lik){
+    log_lik <- apply(log_lik, c(1, 2), sum)
+    T_n <- mean(-log(colMeans(exp(log_lik))))
+    V_n <- mean(apply(log_lik, 2, var))
+    T_n + V_n
+}
 log_lik <- rstan::extract(res_G2PL)$log_lik
 wbic(log_lik)
+waic(log_lik)
