@@ -9,8 +9,8 @@ all(summary(res_G2PL)$summary[,"Rhat"]<1.10)
 
 # evaluation model fit
 wbic <- function(log_lik) {
-  wbic <- -mean(apply(log_lik, 1, sum))
-  return(wbic)
+    wbic <- -mean(apply(log_lik, 1, sum))
+    return(wbic)
 }
 log_lik <- rstan::extract(res_G2PL)$log_lik
 wbic(log_lik)

@@ -9,7 +9,7 @@ function GenerateDummyX(y)
         X[item_range, i] .= 1
         for (j, v) in enumerate(item_range)
             jj = n + j
-            X[v, jj] = y[i, j] == 1 ? -1 : 0
+            # X[v, jj] = y[i, j] == 1 ? -1 : 0
             X[v, jj] = -1
         end
         item_range .+= J
@@ -17,7 +17,9 @@ function GenerateDummyX(y)
     return X
 end
 
-# FC1 : Sampling latent response y* (and colculate ζ vector)
+"""
+    FC1 : Sampling latent response y* (and colculate ζ vector)
+"""
 function FC1(y, yast_long, θ, β, z, ω, ζ)
     n, J = size(y)
     κ = 10^3
@@ -32,7 +34,9 @@ function FC1(y, yast_long, θ, β, z, ω, ζ)
         end
     end
 end
-# FC2 : Sampling θ and β from multivariate normal distribution widh diagonal Σ matrix
+"""
+    FC2 : Sampling θ and β from multivariate normal distribution with diagonal Σ matrix
+"""
 function FC2(X, ζ, V, θ, β, yast_long)
     n = length(θ);
     invΣ = Diagonal(1 ./ ζ);
@@ -42,7 +46,9 @@ function FC2(X, ζ, V, θ, β, yast_long)
     θ[:] = θβ[1:n];
     β[:] = θβ[n+1:end];
 end
-# FC4 : Sampling ω from item response function
+"""
+    FC4 : Sampling ω from item response function
+"""
 function FC4(y, z, θ, β, ω)
     n, J = size(y)
     κ = 10^3
@@ -63,7 +69,9 @@ function FC4(y, z, θ, β, ω)
         end
     end
 end
-# FC5 : Sampling ϕ from posterior Beta distributution
+"""
+    FC5 : Sampling ϕ from posterior Beta distributution
+"""
 function FC5(ϕ, ω)
     n, J = size(ω)
     for i in 1:n
@@ -71,7 +79,9 @@ function FC5(ϕ, ω)
         ϕ[i] = rand(Beta(1 + Ω, 5 + J - Ω), 1)[1]
     end
 end
-# full
+"""
+    Parameter estimation via Gobbs sampler.
+"""
 function GibbsSampler(data; S = 1000)
     # init
     y = copy(data)
@@ -131,7 +141,7 @@ function LogLik(y, θ, β, ω, ϕ)
 end
 
 """
-    Calculate log likekihood via MCMC samples
+    Calculate log likekihood from MCMC samples
 """
 function LogLikeMCMC(y, θ, β, ω, ϕ, warmup = 100)
     S, N = size(θ)

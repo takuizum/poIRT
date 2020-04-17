@@ -1,31 +1,26 @@
+# 必要なパッケージ類はtomlに書いてあります。
+# 実行前にREPLで'] activate .'を実行してください。
+# RCallの呼び出しには，別途Rのインストールと環境設定が必要になります。
+# 下記を参照して，設定してください。
+# http://juliainterop.github.io/RCall.jl/stable/installation.html
+
+
 using Distributions, LinearAlgebra
 
 # sample data
 
 using RCall
 R"""
+# install.packages("irtoys")
 library(irtoys)
 data <- Scored
 """
 @rget data
 data = convert(Matrix{Int64}, data)
 
-include("utils.jl")
+include("src/utils.jl")
 
-y = copy(data)
-N, J = size(y)
-yast = zeros(Float64, N, J) # latent response variable
-yast_long = reshape(yast, N*J, 1)
-ϕ = rand(Beta(1, 5), N)
-ω = zeros(Bool, N, J) # latent discrete outlier variable
-z = rand(Gamma(2, 2), (N, J)) # latent variables to facilitate Gibbs sampling
-V = diagm(fill(1/10^2, N + J))
-X = convert(Matrix{Float64}, GenerateDummyX(y))
-θ = rand(Normal(0, 100), N)
-β = rand(Normal(0, 100), J)
-ζ = zeros(Float64, N*J)
-
-# Full
+# Optimization 
 @code_warntype FC1(y, yast_long, θ, β, z, ω, ζ)
 @code_warntype FC2(X, ζ, V, θ, β, yast_long)
 z = rand(Gamma(2, 2), (N, J))
