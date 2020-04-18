@@ -15,8 +15,8 @@ R"""
 library(irtoys)
 data <- Scored
 """
-@rget data
-data = convert(Matrix{Int64}, data)
+@rget data;
+data = convert(Matrix{Int64}, data);
 
 include("src/utils.jl")
 
@@ -28,7 +28,7 @@ z = rand(Gamma(2, 2), (N, J))
 @code_warntype FC5(ϕ, ω)
 
 # Full GIbbs sampler
-ϕ, ω, θ, β = GibbsSampler(data, S = 2000)
+ϕ, ω, θ, β= GibbsSampler(data, S = 2000);
 
 
 using Plots
@@ -42,8 +42,8 @@ map(i -> -1.702mean(β[:,i]), 1:size(β, 2))
 map(i -> mean(ω[:,i]), 1:18)
 
 using StatsPlots
-density(θ[101:end,1:10], xlims = (-4, 4))
-density(β[101:end,begin:end])
-density(ϕ[101:end,1:10])
+density(θ[201:end,1:10], xlims = (-4, 4))
+density(β[201:end,begin:end])
+density(ϕ[201:end,1:10])
 
 scatter(ω[:,1:18])
