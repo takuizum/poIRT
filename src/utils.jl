@@ -165,13 +165,13 @@ wbic(log_lik) = -mean(map(i -> sum(log_lik[i, .!isnan.(log_lik[i,:])]), size(log
 """
     Return ICC at the grid of arbitrary θ value.
 """
-function ICC(β, ω, θ, warmup = 100)
-    S, N = size(ω)
-    p = zeros(Float64, size(θ))
-    κ = 10^3
-    for s in warmup + 1 : S, i in 1:N
-        p[s, i] += cdf(TDist(4), (β[s] - θ[i]) / κ ^ ω[s,i])
-    end
-    θ_ = reshape(θ, 1, N*S)
-    p = reshape(p, 1, N*S)
-    plot(, ) end
+# function ICC(β, ω, θ, warmup = 100)
+#     S, N = size(ω)
+#     p = zeros(Float64, size(θ))
+#     κ = 10^3
+#     for s in warmup + 1 : S, i in 1:N
+#         p[s, i] += cdf(TDist(4), (β[s] - θ[i]) / κ ^ ω[s,i])
+#     end
+#     θ_ = reshape(θ, 1, N*S)
+#     p = reshape(p, 1, N*S)
+#     plot(, ) end
