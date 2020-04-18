@@ -24,8 +24,7 @@ model{
     // model
     for(k in 1:M){
         for(i in 1:N){
-        // y[i,k] ~ bernoulli_logit(a[k]/sqrt(1+phi[i]^2*a[k]^2)*(theta[i]-b[k]));
-        target += bernoulli_logit_lpmf(y[i, k] | a[k]/sqrt(1+phi[i]^2*a[k]^2)*(theta[i]-b[k]));
+            target += bernoulli_logit_lpmf(y[i, k] | a[k]/sqrt(1+phi[i]^2*a[k]^2)*(theta[i]-b[k]));
         }
     }
 }
