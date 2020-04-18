@@ -22,7 +22,7 @@ end
 """
 function FC1(y, yast_long, θ, β, z, ω, ζ)
     n, J = size(y)
-    κ = 10^3
+    κ = sqrt(10^3)
     t = 0
     for i in 1:n, j in 1:J
         t += 1
@@ -39,10 +39,10 @@ end
 """
 function FC2(X, ζ, V, θ, β, yast_long)
     n = length(θ);
-    invΣ = Diagonal(1 ./ ζ);
+    invΣ = Diagonal(1 ./ ζ .^2);
     V′ = inv(X'invΣ*X + V)
     m = V′*(X'invΣ*yast_long[:]);
-    θβ = rand(MvNormal(m, Symmetric(V′)));
+    θβ = rand(MvNormal(m, Symmetric(sqrt.(V′))));
     θ[:] = θβ[1:n];
     β[:] = θβ[n+1:end];
 end
@@ -51,7 +51,7 @@ end
 """
 function FC4(y, z, θ, β, ω)
     n, J = size(y)
-    κ = 10^3
+    κ = sqrt(10^3)
     for i in 1:n, j in 1:J
         if y[i,j] == 1
             p0 = cdf(Normal(0, z[i, j]), θ[i] - β[j])
@@ -60,7 +60,8 @@ function FC4(y, z, θ, β, ω)
             p0 = 1.0 - cdf(Normal(0, z[i, j]), θ[i] - β[j])
             p1 = 1.0 - cdf(Normal(0, z[i, j]*κ), θ[i] - β[j])
         end
-        p = (p0^(1 - ω[i, j]) * p1^ω[i, j]) / (p0 + p1)
+        # println("$(round(p1; digits = 5)) and $(round(p0; digits = 5))")
+        p = ω[i, j] ? p1 / (p1 + p0) : p0 / (p1 + p0)
         if !isequal(p, NaN)
             ω[i, j] = rand(Bernoulli(p), 1)[1]
         else
@@ -90,7 +91,7 @@ function GibbsSampler(data; S = 1000)
     yast_long = reshape(yast, N*J, 1)
     ϕ = rand(Beta(1, 5), N)
     ω = zeros(Bool, N, J) # latent discrete outlier variable
-    z = rand(Gamma(2, 2), (N, J)) # latent variables to facilitate Gibbs sampling
+    z = sqrt.(rand(Gamma(2, 2), (N, J))) # latent variables to facilitate Gibbs sampling
     V = Diagonal(fill(1/10^2, N + J)) # Prior (accuracy) of θ and β
     X = convert(Matrix{Float64}, GenerateDummyX(y))
     θ = rand(Normal(0, 100), N)
@@ -107,25 +108,25 @@ function GibbsSampler(data; S = 1000)
         print("Sampling $s...\r")
         FC1(y, yast_long, θ, β, z, ω, ζ)
         FC2(X, ζ, V, θ, β, yast_long)
-        z = rand(Gamma(2, 2), (N, J))
+        z = sqrt.(rand(Gamma(2, 2), (N, J)))
         FC4(y, z, θ, β, ω)
         FC5(ϕ, ω)
         # save
-        ϕres[s, :] = ϕ[:]
-        ωres[s, :, :] = ω
+        ϕres[s, :] = @view ϕ[:]
+        ωres[s, :, :] = @view ω[:,:]
         μ = mean(θ[:])
         σ = sqrt(var(θ[:]))
         θ[:] = (θ[:] .- μ) ./ σ
         β[:] = (β[:] .- μ) ./ σ
-        θres[s, :] = θ[:]
-        βres[s, :] = β[:]
+        θres[s, :] = @view θ[:]
+        βres[s, :] = @view β[:]
     end
     return (ϕres, ωres, θres, βres);
 end
 # Model likekihood
 F(x, z) = cdf(Normal(0, z), x)
 lnp = function(y, θ, β, ω, ϕ)
-    κ = 10^3
+    κ = sqrt(10^3)
     l = zero(Float64)
     l += y == 1 ? log(F(θ-β, κ^ω)) : log(1 - F(θ, κ^ω))
     l += ω ? log(ϕ) : log(1-ϕ)
@@ -160,3 +161,17 @@ function waic(log_lik)
     mean(T_n[.!isnan.(T_n)]) + mean(V_n[.!isnan.(V_n)])
 end
 wbic(log_lik) = -mean(map(i -> sum(log_lik[i, .!isnan.(log_lik[i,:])]), size(log_lik, 1)))
+
+"""
+    Return ICC at the grid of arbitrary θ value.
+"""
+function ICC(β, ω, θ, warmup = 100)
+    S, N = size(ω)
+    p = zeros(Float64, size(θ))
+    κ = 10^3
+    for s in warmup + 1 : S, i in 1:N
+        p[s, i] += cdf(TDist(4), (β[s] - θ[i]) / κ ^ ω[s,i])
+    end
+    θ_ = reshape(θ, 1, N*S)
+    p = reshape(p, 1, N*S)
+    plot(, ) end
