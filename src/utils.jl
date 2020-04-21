@@ -128,8 +128,9 @@ F(x, z) = cdf(Normal(0, z), x)
 lnp = function(y, θ, β, ω, ϕ)
     κ = sqrt(10^3)
     l = zero(Float64)
+    
     l += y == 1 ? log(F(θ-β, κ^ω)) : log(1 - F(θ, κ^ω))
-    l += ω ? log(ϕ) : log(1-ϕ)
+    # l += ω ? log(ϕ) : log(1-ϕ)
     return l
 end
 function LogLik(y, θ, β, ω, ϕ)
